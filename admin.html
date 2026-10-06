@@ -4,13 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ระบบบันทึกคิวคนงาน - Admin Panel</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://jsdelivr.net"></script>
+    <link rel="stylesheet" href="https://cloudflare.com">
     <style>
         body { font-family: 'Line Seed', 'Sarabun', sans-serif; }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
+<!-- ซ่อนหน้าจอเริ่มต้นเพื่อตรวจรหัสผ่านก่อน -->
+<body id="admin-body" class="bg-gray-100 min-h-screen invisible">
 
     <!-- Header -->
     <header class="bg-emerald-700 text-white p-4 shadow-md flex justify-between items-center">
@@ -21,14 +22,18 @@
                 <p class="text-xs text-emerald-200">Worker Queue Management • Admin Panel</p>
             </div>
         </div>
-        <div class="bg-amber-500 text-xs px-3 py-1.5 rounded-full font-semibold flex items-center space-x-1 shadow">
-            <i class="fa-solid fa-user-shield"></i>
-            <span>โหมดแอดมิน (จัดการได้เต็มรูปแบบ)</span>
+        <div class="flex items-center space-x-3">
+            <div class="bg-amber-500 text-xs px-3 py-1.5 rounded-full font-semibold flex items-center space-x-1 shadow">
+                <i class="fa-solid fa-user-shield"></i>
+                <span>โหมดแอดมิน</span>
+            </div>
+            <a href="index.html" class="bg-emerald-800 hover:bg-emerald-900 text-white text-xs px-3 py-1.5 rounded-lg transition-colors font-medium">
+                <i class="fa-solid fa-arrow-left mr-1"></i>กลับหน้าบอร์ด
+            </a>
         </div>
     </header>
 
     <div class="max-w-7xl mx-auto p-4 sm:p-6 space-y-6">
-
         <!-- บอร์ดสถิติบน -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-blue-500">
@@ -49,7 +54,7 @@
             </div>
         </div>
 
-        <!-- แถบเครื่องมือ -->
+        <!-- เครื่องมือเครื่องจักร -->
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-4 rounded-xl shadow-sm">
             <button onclick="openModal()" class="bg-emerald-700 hover:bg-emerald-800 text-white font-medium px-5 py-2.5 rounded-lg flex items-center space-x-2 shadow-sm transition-colors cursor-pointer w-full md:w-auto justify-center">
                 <i class="fa-solid fa-plus"></i>
@@ -96,7 +101,6 @@
                     <tbody id="queue-table-body" class="text-sm text-gray-700 divide-y divide-gray-100"></tbody>
                 </table>
             </div>
-            
             <div id="no-data-view" class="hidden p-12 flex flex-col items-center justify-center text-gray-400 space-y-2">
                 <i class="fa-regular fa-folder-open text-4xl text-gray-300"></i>
                 <p class="text-sm">ยังไม่มีข้อมูลคิวงาน</p>
@@ -141,160 +145,13 @@
                         <input type="text" id="form-job" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">ทะเบียนรถ (ถ้ามี)</label>
-                        <input type="text" id="form-plate" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="กข 1234 กรุงเทพ">
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">ทะเบียนรถ</label>
+                        <input type="text" id="form-plate" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     </div>
                 </div>
                 <div class="pt-4 flex justify-end space-x-3 border-t border-gray-100">
                     <button type="button" onclick="closeModal()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 cursor-pointer">ยกเลิก</button>
-                    <button type="submit" class="px-5 py-2 bg-emerald-700 text-white rounded-lg text-sm font-medium hover:bg-emerald-800 shadow-sm cursor-pointer">บันทึกข้อมูล</button>
-                </div>
-            </form>
-        </div>
-    </div>
 
-    <script>
-        const syncChannel = new BroadcastChannel('worker_queue_stream');
-        let queueData = JSON.parse(localStorage.getItem('worker_queues')) || [];
-
-        document.getElementById('filter-date').value = new Date().toISOString().split('T')[0];
-
-        function broadcastUpdate() {
-            localStorage.setItem('worker_queues', JSON.stringify(queueData));
-            syncChannel.postMessage({ type: 'UPDATE_DATA', data: queueData });
-        }
-
-        function openModal() {
-            document.getElementById('queue-modal').style.display = 'flex';
-        }
-
-        function closeModal() {
-            document.getElementById('queue-modal').style.display = 'none';
-            document.getElementById('queue-form').reset();
-        }
-
-        function saveQueue(e) {
-            e.preventDefault();
-            const now = new Date();
-            const newQueue = {
-                id: queueData.length > 0 ? Math.max(...queueData.map(q => q.id)) + 1 : 1,
-                time: now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
-                date: now.toISOString().split('T')[0],
-                worker: document.getElementById('form-worker').value,
-                company: document.getElementById('form-company').value || '-',
-                department: document.getElementById('form-department').value || '-',
-                project: document.getElementById('form-project').value || '-',
-                job: document.getElementById('form-job').value || '-',
-                plate: document.getElementById('form-plate').value || '',
-                status: 'waiting'
-            };
-
-            queueData.push(newQueue);
-            broadcastUpdate();
-            renderTable();
-            closeModal();
-        }
-
-        function updateStatus(id, newStatus) {
-            queueData = queueData.map(item => item.id === id ? { ...item, status: newStatus } : item);
-            broadcastUpdate();
-            renderCounters();
-        }
-
-        function deleteQueue(id) {
-            if(confirm('คุณต้องการลบคิวนี้ใช่หรือไม่?')) {
-                queueData = queueData.filter(item => item.id !== id);
-                broadcastUpdate();
-                renderTable();
-            }
-        }
-
-        function renderCounters() {
-            const activeDate = document.getElementById('filter-date').value;
-            const dailyData = queueData.filter(item => item.date === activeDate);
-            
-            document.getElementById('count-all').innerText = dailyData.length;
-            document.getElementById('count-waiting').innerText = dailyData.filter(i => i.status === 'waiting').length;
-            document.getElementById('count-processing').innerText = dailyData.filter(i => i.status === 'processing').length;
-            document.getElementById('count-done').innerText = dailyData.filter(i => i.status === 'done').length;
-        }
-
-        function renderTable() {
-            const tbody = document.getElementById('queue-table-body');
-            const noDataView = document.getElementById('no-data-view');
-            const searchTerm = document.getElementById('search-input').value.toLowerCase();
-            const statusFilter = document.getElementById('filter-status').value;
-            const dateFilter = document.getElementById('filter-date').value;
-
-            const filteredData = queueData.filter(item => {
-                const matchDate = item.date === dateFilter;
-                const matchStatus = statusFilter === 'all' || item.status === statusFilter;
-                const matchSearch = item.id.toString().includes(searchTerm) || 
-                                    item.worker.toLowerCase().includes(searchTerm) || 
-                                    item.company.toLowerCase().includes(searchTerm);
-                return matchDate && matchStatus && matchSearch;
-            });
-
-            renderCounters();
-            tbody.innerHTML = '';
-
-            if (filteredData.length === 0) {
-                noDataView.classList.remove('hidden');
-                return;
-            }
-            noDataView.classList.add('hidden');
-
-            filteredData.forEach(item => {
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-gray-50 transition-colors";
-                tr.innerHTML = `
-                    <td class="p-4 text-center font-bold text-emerald-700">#\${item.id}</td>
-                    <td class="p-4 text-gray-500">\${item.time} น.</td>
-                    <td class="p-4 font-semibold text-gray-800">\${item.worker}</td>
-                    <td class="p-4 text-gray-600">\${item.company}</td>
-                    <td class="p-4 text-gray-600">\${item.department}</td>
-                    <td class="p-4 text-gray-600">\${item.project}</td>
-                    <td class="p-4 text-gray-600">\${item.job}</td>
-                    <td class="p-4 text-gray-600 font-mono">
-                        \${item.plate ? `<i class="fa-solid fa-truck text-gray-400 mr-1"></i>\${item.plate}` : '-'}
-                    </td>
-                    <td class="p-4 text-center">
-                        <select onchange="updateStatus(\${item.id}, this.value)" class="text-xs font-semibold px-2.5 py-1.5 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white">
-                            <option value="waiting" \${item.status === 'waiting' ? 'selected' : ''}>รอคิว</option>
-                            <option value="processing" \${item.status === 'processing' ? 'selected' : ''}>กำลังดำเนินการ</option>
-                            <option value="done" \${item.status === 'done' ? 'selected' : ''}>เสร็จสิ้น</option>
-                        </select>
-                    </td>
-                    <td class="p-4 text-center">
-                        <button onclick="deleteQueue(\${item.id})" class="text-red-500 hover:text-red-700 p-1 cursor-pointer transition-colors">
-                            <i class="fa-regular fa-trash-can text-base"></i>
-                        </button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function exportToCSV() {
-            const dateFilter = document.getElementById('filter-date').value;
-            const targetData = queueData.filter(i => i.date === dateFilter);
-            if(targetData.length === 0) return alert('ไม่มีข้อมูลคิวของวันที่เลือกเพื่อดาวน์โหลด');
-
-            let csvContent = "\uFEFFเลขคิว,เวลา,คนงาน,บริษัท,แผนก,โครงการ,งาน,ทะเบียนรถ,สถานะ\n";
-            targetData.forEach(i => {
-                csvContent += `"\${i.id}","\${i.time}","\${i.worker}","\${i.company}","\${i.department}","\${i.project}","\${i.job}","\${i.plate}","\${i.status}"\n`;
-            });
-
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.setAttribute("download", `Queue_Report_\${dateFilter}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-
-        renderTable();
     </script>
 </body>
 </html>
