@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>กระดานแสดงสถานะคิวงาน (Read-Only)</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Line Seed', 'Sarabun', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen">
+
+    <!-- Top Banner -->
+    <header class="bg-gray-800 border-b border-gray-700 p-4 shadow-lg flex justify-between items-center">
+        <div class="flex items-center space-x-3">
+            <div class="bg-emerald-600 p-2 rounded-lg text-white">
+                <i class="fa-solid fa-display text-xl animate-pulse"></i>
+            </div>
+            <div>
+                <h1 class="text-lg font-bold text-white tracking-wide">กระดานลำดับคิวคนงานและยานพาหนะ</h1>
+                <p class="text-xs text-gray-400">อัปเดตข้อมูลแบบสดใหม่ Real-time (ดูได้อย่างเดียว)</p>
+            </div>
+        </div>
+        <div id="live-indicator" class="bg-emerald-950 border border-emerald-500/30 text-emerald-400 text-xs px-3 py-1 rounded-full font-medium flex items-center space-x-1.5 shadow-sm">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+            <span>ระบบเชื่อมต่อเรียบร้อย</span>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto p-4 sm:p-6 space-y-6">
+        
+        <!-- แถบระบุวันที่ -->
+        <div class="flex justify-between items-center bg-gray-800 p-4 rounded-xl border border-gray-700 shadow-sm">
+            <span class="text-sm font-semibold text-gray-300"><i class="fa-regular fa-calendar-days mr-2"></i>ตารางคิวงานประจำวัน</span>
+            <input type="date" id="viewer-date" onchange="renderViewer()" class="bg-gray-900 border border-gray-600 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+        </div>
+
+        <!-- หน้าจอแสดงตาราง -->
+        <div class="bg-gray-800 rounded-xl border border-gray-700 shadow-xl overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-800/50 border-b border-gray-700 text-gray-400 text-xs font-bold uppercase tracking-wider">
+                            <th class="p-4 text-center">เลขคิว</th>
+                            <th class="p-4">เวลา</th>
+                            <th class="p-4 text-base">ชื่อคนงาน / พนักงานขับรถ</th>
+                            <th class="p-4">บริษัท</th>
+                            <th class="p-4">ไซต์งาน/โครงการ</th>
+                            <th class="p-4">ลักษณะงาน</th>
+                            <th class="p-4">ทะเบียนรถ</th>
+                            <th class="p-4 text-center">สถานะ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="viewer-table-body" class="text-sm divide-y divide-gray-700/50"></tbody>
+                </table>
+            </div>
+
+            <div id="viewer-no-data" class="hidden p-16 flex flex-col items-center justify-center text-gray-500 space-y-3">
+                <i class="fa-solid fa-hourglass-start text-4xl text-gray-600 animate-bounce"></i>
+                <p class="text-base font-medium">ยังไม่มีรายการจัดคิวงานในวันที่เลือก</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const syncChannel = new BroadcastChannel('worker_queue_stream');
+        let queueData = JSON.parse(localStorage.getItem('worker_queues')) || [];
+
+        document.getElementById('viewer-date').value = new Date().toISOString().split('T')[0];
+
+        syncChannel.onmessage = (event) => {
+            if (event.data.type === 'UPDATE_DATA') {
+                queueData = event.data.data;
+                renderViewer();
+            }
+        };
+
+        function renderViewer() {
+            const tbody = document.getElementById('viewer-table-body');
+            const noDataView = document.getElementById('viewer-no-data');
+            const targetDate = document.getElementById('viewer-date').value;
+
+            const activeQueues = queueData.filter(item => item.date === targetDate);
+
+            tbody.innerHTML = '';
+
+            if(activeQueues.length === 0) {
+                noDataView.classList.remove('hidden');
+                return;
+            }
+            noDataView.classList.add('hidden');
+
+            activeQueues.forEach(item => {
+                let statusBadge = '';
+                if(item.status === 'waiting') {
+                    statusBadge = `<span class="bg-amber-500/10 border border-amber-500/30 text-amber-500 px-3 py-1 rounded-full font-bold text-xs"><i class="fa-regular fa-clock mr-1"></i>รอเรียกคิว</span>`;
+                } else if(item.status === 'processing') {
+                    statusBadge = `<span class="bg-orange-500/10 border border-orange-500/30 text-orange-400 px-3 py-1 rounded-full font-bold text-xs"><i class="fa-solid fa-spinner animate-spin mr-1"></i>กำลังดำเนินการ</span>`;
+                } else {
+                    statusBadge = `<span class="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-3 py-1 rounded-full font-bold text-xs"><i class="fa-regular fa-circle-check mr-1"></i>เสร็จสิ้น</span>`;
+                }
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-700/30 transition-colors border-b border-gray-700/30";
+                tr.innerHTML = `
+                    <td class="p-4 text-center font-black text-xl text-emerald-400 tracking-wide">#\  {item.id}</td>
+                    <td class="p-4 text-gray-400 font-medium">\  {item.time} น.</td>
+                    <td class="p-4 text-base font-bold text-white">\  {item.worker}</td>
+                    <td class="p-4 text-gray-300">\  {item.company}</td>
+                    <td class="p-4 text-gray-300 font-medium text-amber-200">\  {item.project}</td>
+                    <td class="p-4 text-gray-400">\  {item.job}</td>
+                    <td class="p-4 font-mono font-bold text-cyan-400">
+                        \  {item.plate ? `<i class="fa-solid fa-truck-ramp-box mr-1 text-gray-500"></i>\  {item.plate}` : '-'}
+                    </td>
+                    <td class="p-4 text-center">\  {statusBadge}</td>
+                `.replace(/\s\s{/g, '{'); // Fix formatting space if any
+                tbody.appendChild(tr);
+            });
+        }
+
+        renderViewer();
+    </script>
+</body>
+</html>
