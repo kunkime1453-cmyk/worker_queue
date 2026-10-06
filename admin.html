@@ -4,14 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ระบบบันทึกคิวคนงาน - Admin Panel</title>
-    <script src="https://jsdelivr.net"></script>
+    <!-- เปลี่ยนมาใช้ Tailwind CSS v3 เสถียรและปลอดภัยบน GitHub Pages 100% -->
+    <script src="https://tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cloudflare.com">
     <style>
-        body { font-family: 'Line Seed', 'Sarabun', sans-serif; }
+        @import url('https://googleapis.com');
+        body { font-family: 'Sarabun', sans-serif; }
     </style>
 </head>
-<!-- ซ่อนหน้าจอเริ่มต้นเพื่อตรวจรหัสผ่านก่อน -->
-<body id="admin-body" class="bg-gray-100 min-h-screen invisible">
+<body id="admin-body" class="bg-gray-100 min-h-screen hidden">
 
     <!-- Header -->
     <header class="bg-emerald-700 text-white p-4 shadow-md flex justify-between items-center">
@@ -109,14 +110,14 @@
     </div>
 
     <!-- Modal ฟอร์มคิวใหม่ -->
-    <div id="queue-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div id="queue-modal" class="fixed inset-0 bg-black/50 backdrop-blur-[2px] hidden items-center justify-center z-50 p-4">
         <div class="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden transform transition-all">
             <div class="bg-emerald-700 text-white p-4 flex justify-between items-center">
                 <h3 class="font-bold flex items-center space-x-2">
                     <i class="fa-solid fa-circle-plus"></i>
                     <span>กรอกข้อมูลบันทึกคิวใหม่</span>
                 </h3>
-                <button onclick="closeModal()" class="text-white/80 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+                <button type="button" onclick="closeModal()" class="text-white/80 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <form id="queue-form" onsubmit="saveQueue(event)" class="p-6 space-y-4">
                 <div class="grid grid-cols-2 gap-4">
@@ -150,8 +151,4 @@
                     </div>
                 </div>
                 <div class="pt-4 flex justify-end space-x-3 border-t border-gray-100">
-                    <button type="button" onclick="closeModal()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 cursor-pointer">ยกเลิก</button>
 
-    </script>
-</body>
-</html>
