@@ -4,12 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>กระดานแสดงสถานะคิวงาน (Read-Only)</title>
-    <!-- เปลี่ยนมาใช้ Tailwind CSS v3 เสถียรและปลอดภัยบน GitHub Pages 100% -->
-    <script src="https://tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cloudflare.com">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://googleapis.com');
-        body { font-family: 'Sarabun', sans-serif; }
+        body { font-family: 'Line Seed', 'Sarabun', sans-serif; }
     </style>
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen">
@@ -25,23 +23,21 @@
                 <p class="text-xs text-gray-400">อัปเดตข้อมูลแบบสดใหม่ Real-time (ดูได้อย่างเดียว)</p>
             </div>
         </div>
-        <div class="flex items-center space-x-3">
-            <div id="live-indicator" class="bg-emerald-950 border border-emerald-500/30 text-emerald-400 text-xs px-3 py-1 rounded-full font-medium flex items-center space-x-1.5 shadow-sm">
-                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-                <span>ระบบเชื่อมต่อเรียบร้อย</span>
-            </div>
-            <button onclick="promptAdminPassword()" class="text-gray-500 hover:text-white p-2 rounded-lg transition-colors cursor-pointer" title="สำหรับแอดมิน">
-                <i class="fa-solid fa-gear text-lg"></i>
-            </button>
+        <div id="live-indicator" class="bg-emerald-950 border border-emerald-500/30 text-emerald-400 text-xs px-3 py-1 rounded-full font-medium flex items-center space-x-1.5 shadow-sm">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+            <span>ระบบเชื่อมต่อเรียบร้อย</span>
         </div>
     </header>
 
     <div class="max-w-7xl mx-auto p-4 sm:p-6 space-y-6">
+        
+        <!-- แถบระบุวันที่ -->
         <div class="flex justify-between items-center bg-gray-800 p-4 rounded-xl border border-gray-700 shadow-sm">
             <span class="text-sm font-semibold text-gray-300"><i class="fa-regular fa-calendar-days mr-2"></i>ตารางคิวงานประจำวัน</span>
             <input type="date" id="viewer-date" onchange="renderViewer()" class="bg-gray-900 border border-gray-600 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
         </div>
 
+        <!-- หน้าจอแสดงตาราง -->
         <div class="bg-gray-800 rounded-xl border border-gray-700 shadow-xl overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
@@ -81,22 +77,15 @@
             }
         };
 
-        function promptAdminPassword() {
-            const pass = prompt("กรุณากรอกรหัสผ่านเพื่อเข้าสู่โหมดแอดมิน:");
-            if (pass === "1234") {
-                window.location.href = "admin.html";
-            } else if (pass !== null) {
-                alert("รหัสผ่านไม่ถูกต้อง!");
-            }
-        }
-
         function renderViewer() {
             const tbody = document.getElementById('viewer-table-body');
             const noDataView = document.getElementById('viewer-no-data');
             const targetDate = document.getElementById('viewer-date').value;
+
             const activeQueues = queueData.filter(item => item.date === targetDate);
 
             tbody.innerHTML = '';
+
             if(activeQueues.length === 0) {
                 noDataView.classList.remove('hidden');
                 return;
@@ -116,22 +105,22 @@
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-gray-700/30 transition-colors border-b border-gray-700/30";
                 tr.innerHTML = `
-                    <td class="p-4 text-center font-bold text-xl text-emerald-400 tracking-wide">#${item.id}</td>
-                    <td class="p-4 text-gray-400 font-medium">${item.time} น.</td>
-                    <td class="p-4 text-base font-bold text-white">${item.worker}</td>
-                    <td class="p-4 text-gray-300">${item.company}</td>
-                    <td class="p-4 text-gray-300 font-medium text-amber-200">${item.project}</td>
-                    <td class="p-4 text-gray-400">${item.job}</td>
+                    <td class="p-4 text-center font-black text-xl text-emerald-400 tracking-wide">#\  {item.id}</td>
+                    <td class="p-4 text-gray-400 font-medium">\  {item.time} น.</td>
+                    <td class="p-4 text-base font-bold text-white">\  {item.worker}</td>
+                    <td class="p-4 text-gray-300">\  {item.company}</td>
+                    <td class="p-4 text-gray-300 font-medium text-amber-200">\  {item.project}</td>
+                    <td class="p-4 text-gray-400">\  {item.job}</td>
                     <td class="p-4 font-mono font-bold text-cyan-400">
-                        ${item.plate ? `<i class="fa-solid fa-truck-ramp-box mr-1 text-gray-500"></i>\${item.plate}` : '-'}
+                        \  {item.plate ? `<i class="fa-solid fa-truck-ramp-box mr-1 text-gray-500"></i>\  {item.plate}` : '-'}
                     </td>
-                    <td class="p-4 text-center">${statusBadge}</td>
-                `;
+                    <td class="p-4 text-center">\  {statusBadge}</td>
+                `.replace(/\s\s{/g, '{'); // Fix formatting space if any
                 tbody.appendChild(tr);
             });
         }
+
         renderViewer();
     </script>
 </body>
 </html>
-
