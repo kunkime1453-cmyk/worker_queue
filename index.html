@@ -4,10 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>กระดานแสดงสถานะคิวงาน (Read-Only)</title>
-    <script src="https://jsdelivr.net"></script>
+    <!-- เปลี่ยนมาใช้ Tailwind CSS v3 เสถียรและปลอดภัยบน GitHub Pages 100% -->
+    <script src="https://tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cloudflare.com">
     <style>
-        body { font-family: 'Line Seed', 'Sarabun', sans-serif; }
+        @import url('https://googleapis.com');
+        body { font-family: 'Sarabun', sans-serif; }
     </style>
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen">
@@ -28,7 +30,6 @@
                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
                 <span>ระบบเชื่อมต่อเรียบร้อย</span>
             </div>
-            <!-- ปุ่มทางลัดลับสำหรับแอดมิน -->
             <button onclick="promptAdminPassword()" class="text-gray-500 hover:text-white p-2 rounded-lg transition-colors cursor-pointer" title="สำหรับแอดมิน">
                 <i class="fa-solid fa-gear text-lg"></i>
             </button>
@@ -80,10 +81,9 @@
             }
         };
 
-        // ฟังก์ชันถามรหัสผ่านก่อนเปิดไปหน้าแอดมิน
         function promptAdminPassword() {
             const pass = prompt("กรุณากรอกรหัสผ่านเพื่อเข้าสู่โหมดแอดมิน:");
-            if (pass === "1234") { // สามารถแก้ไขรหัสผ่านตรงนี้ได้
+            if (pass === "1234") {
                 window.location.href = "admin.html";
             } else if (pass !== null) {
                 alert("รหัสผ่านไม่ถูกต้อง!");
@@ -116,7 +116,7 @@
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-gray-700/30 transition-colors border-b border-gray-700/30";
                 tr.innerHTML = `
-                    <td class="p-4 text-center font-black text-xl text-emerald-400 tracking-wide">#${item.id}</td>
+                    <td class="p-4 text-center font-bold text-xl text-emerald-400 tracking-wide">#${item.id}</td>
                     <td class="p-4 text-gray-400 font-medium">${item.time} น.</td>
                     <td class="p-4 text-base font-bold text-white">${item.worker}</td>
                     <td class="p-4 text-gray-300">${item.company}</td>
@@ -135,6 +135,3 @@
 </body>
 </html>
 
-    </script>
-</body>
-</html>
